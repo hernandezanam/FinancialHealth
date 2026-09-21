@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annual Budget & Financial Health Suite</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- html2pdf.js for exporting PDF report -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        .tab-btn.active {
+            border-bottom: 3px solid #2563eb;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased">
+
+    <div>
+        <!-- Top Banner / Header -->
+        <header class="bg-slate-900 text-white shadow-md border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-1">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span>100% Client-Side & Private • Local Auto-Save Active</span>
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Annual Budget & Financial Health Suite</h1>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+                            Created & Authored by <span class="text-slate-200 font-medium">Ana M Hernandez Munoz</span> | 
+                            <a href="mailto:acctgthemagic@gmail.com" class="text-blue-400 hover:underline">acctgthemagic@gmail.com</a>
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <!-- Direct Excel Download Link -->
+                        <a href="Template_Annual_Budget_and_Financial_Health_Tracker.xlsx" download class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow transition-all duration-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span>Download Excel</span>
+                        </a>
+
+                        <!-- Export Backup JSON -->
+                        <button onclick="exportJSONBackup()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold border border-slate-700 transition-all duration-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-download text-blue-400"></i>
+                            <span>Export Backup</span>
+                        </button>
+
+                        <!-- Import Backup JSON -->
+                        <label class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold border border-slate-700 transition-all duration-200 flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-upload text-emerald-400"></i>
+                            <span>Import Backup</span>
+                            <input type="file" id="importFile" accept=".json" onchange="importJSONBackup(event)" class="hidden">
+                        </label>
+
+                        <!-- Export PDF Report Button -->
+                        <button onclick="exportCombinedPDF()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow transition-all duration-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>Export PDF</span>
+                        </button>
+
+                        <!-- Reset Data Button -->
+                        <button onclick="resetToBlank()" class="bg-amber-600 hover:bg-amber-500 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow transition-all duration-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>Reset</span>
+                        </button>
+
+                        <!-- EULA & Terms Modal Button -->
+                        <button onclick="toggleModal('eulaModal')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-xs font-medium border border-slate-700 transition-all duration-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-scale-balanced"></i>
+                            <span>Terms</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <nav class="flex space-x-6 overflow-x-auto no-scrollbar" aria-label="Tabs">
+                    <button onclick="switchTab('startingPointTab')" id="tab-startingPointTab" class="tab-btn active py-4 px-1 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 flex items-center gap-2">
+                        <i class="fa-solid fa-wallet"></i> Tab 1: Starting Point
+                    </button>
+                    <button onclick="switchTab('annualPlanTab')" id="tab-annualPlanTab" class="tab-btn py-4 px-1 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-700 whitespace-nowrap border-b-2 border-transparent flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days"></i> Tab 2: 12-Month Budget
+                    </button>
+                    <button onclick="switchTab('consultationTab')" id="tab-consultationTab" class="tab-btn py-4 px-1 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-700 whitespace-nowrap border-b-2 border-transparent flex items-center gap-2">
+                        <i class="fa-solid fa-user-tie"></i> Tab 3: Consultation
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+            <!-- TAB 1: FINANCIAL STARTING POINT -->
+            <div id="startingPointTab" class="tab-content block space-y-6">
+                <!-- Summary Metrics Dashboard Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+                            <span>Total Net Worth</span>
+                            <i class="fa-solid fa-chart-line text-blue-600 text-base"></i>
+                        </div>
+                        <div id="metricNetWorth" class="text-2xl font-bold text-slate-900">$0.00</div>
+                        <p class="text-xs text-slate-500 mt-1">Total Assets minus Liabilities</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+                            <span>Liquid Assets</span>
+                            <i class="fa-solid fa-money-bill-wave text-emerald-600 text-base"></i>
+                        </div>
+                        <div id="metricLiquidBalance" class="text-2xl font-bold text-emerald-600">$0.00</div>
+                        <p class="text-xs text-slate-500 mt-1">Checking + Savings Balance</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+                            <span>Debt-to-Asset Ratio</span>
+                            <i class="fa-solid fa-scale-unbalanced-flip text-amber-600 text-base"></i>
+                        </div>
+                        <div id="metricDebtToAsset" class="text-2xl font-bold text-slate-900">0.0%</div>
+                        <p class="text-xs text-slate-500 mt-1">Target: &lt; 30% for health</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+                            <span>Emergency Multiplier</span>
+                            <i class="fa-solid fa-life-ring text-indigo-600 text-base"></i>
+                        </div>
+                        <div id="metricEmergencyMonths" class="text-2xl font-bold text-slate-900">0.0 Months</div>
+                        <p class="text-xs text-slate-500 mt-1">Liquid balance vs needs</p>
+                    </div>
+                </div>
+
+                <!-- Input Panels Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    <div class="space-y-6">
+                        <!-- Profile Card -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                            <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-id-card text-blue-600"></i> Personal Profile & Income
+                            </h2>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Current Age</label>
+                                    <input type="number" id="inputAge" value="" placeholder="e.g. 30" oninput="updateCalculations()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Annual Gross Salary ($)</label>
+                                    <input type="number" id="inputSalary" value="" placeholder="0" oninput="updateCalculations()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Asset Accounts Breakdown -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                            <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-vault text-emerald-600"></i> Asset Accounts Balance
+                            </h2>
+                            <div class="space-y-2.5">
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="text-xs font-medium text-slate-700">Checking Account ($)</label>
+                                    <input type="number" id="assetChecking" value="" placeholder="0" oninput="updateCalculations()" class="w-40 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1 text-xs text-right focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="text-xs font-medium text-slate-700">Emergency / Savings Account ($)</label>
+                                    <input type="number" id="assetSavings" value="" placeholder="0" oninput="updateCalculations()" class="w-40 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1 text-xs text-right focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="text-xs font-medium text-slate-700">Taxable Investment Accounts ($)</label>
+                                    <input type="number" id="assetInvestments" value="" placeholder="0" oninput="updateCalculations()" class="w-40 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1 text-xs text-right focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="text-xs font-medium text-slate-700">Retirement (401k, IRA) ($)</label>
+                                    <input type="number" id="assetRetirement" value="" placeholder="0" oninput="updateCalculations()" class="w-40 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1 text-xs text-right focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="text-xs font-medium text-slate-700">Real Estate / Other Assets ($)</label>
+                                    <input type="number" id="assetOther" value="" placeholder="0" oninput="updateCalculations()" class="w-40 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1 text-xs text-right focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                </div>
+                                <div class="border-t border-slate-200 pt-2 flex justify-between items-center font-bold text-slate-900 text-xs">
+                                    <span>Total Assets:</span>
+                                    <span id="displayTotalAssets" class="text-emerald-600 text-sm">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Debt & Liabilities Breakdown -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                            <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-credit-card text-rose-600"></i> Debt & Liabilities
+                            </h2>
+                            <div class="space-y-2.5">
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="text-xs font-medium text-slate-700">Credit Card Balances ($)</label>
+                                    <input type="number" id="debtCredit" value="" placeholder="0" oninput="updateCalculations()" class="w-40 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1 text-xs text-right focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                                </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="text-xs font-medium text-slate-700">Auto Loans ($)</label>
+                                    <input type="number" id="debtAuto" value="" placeholder="0" oninput="updateCalculations()" class="w-40 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1 text-xs text-right focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                                </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="text-xs font-medium text-slate-700">Student Loans ($)</label>
+                                    <input type="number" id="debtStudent" value="" placeholder="0" oninput="updateCalculations()" class="w-40 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1 text-xs text-right focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                                </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="text-xs font-medium text-slate-700">Mortgage Balance ($)</label>
+                                    <input type="number" id="debtMortgage" value="" placeholder="0" oninput="updateCalculations()" class="w-40 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1 text-xs text-right focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                                </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="text-xs font-medium text-slate-700">Other Debts / Personal ($)</label>
+                                    <input type="number" id="debtOther" value="" placeholder="0" oninput="updateCalculations()" class="w-40 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1 text-xs text-right focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                                </div>
+                                <div class="border-t border-slate-200 pt-2 flex justify-between items-center font-bold text-slate-900 text-xs">
+                                    <span>Total Liabilities:</span>
+                                    <span id="displayTotalLiabilities" class="text-rose-600 text-sm">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Benchmarks Table -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                            <h2 class="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-bullseye text-indigo-600"></i> Retirement Readiness Benchmarks
+                            </h2>
+                            <p class="text-[11px] text-slate-500 mb-3">Fidelity rule of thumb targets by age cohort.</p>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs text-left text-slate-700">
+                                    <thead class="bg-slate-100 text-slate-800 font-semibold uppercase">
+                                        <tr>
+                                            <th class="px-2.5 py-1.5 rounded-l">Age Milestone</th>
+                                            <th class="px-2.5 py-1.5">Target Multiple</th>
+                                            <th class="px-2.5 py-1.5">Target Savings</th>
+                                            <th class="px-2.5 py-1.5 rounded-r">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="benchmarkTableBody" class="divide-y divide-slate-100">
+                                        <!-- Dynamically generated rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: 12-MONTH ANNUAL BUDGET PLAN -->
+            <div id="annualPlanTab" class="tab-content hidden space-y-6">
+                <div class="bg-blue-900 text-white p-4 rounded-xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-blue-800 rounded-lg text-blue-200">
+                            <i class="fa-solid fa-link text-lg"></i>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-semibold uppercase text-blue-300">Starting Cash Carryover</span>
+                            <h3 class="text-base font-bold">Starting Balance: <span id="budgetStartingCashDisplay" class="text-emerald-300">$0.00</span></h3>
+                            <p class="text-xs text-blue-200">Linked directly from Tab 1 Liquid Cash.</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[11px] font-semibold uppercase text-blue-300">12-Month Cumulative Cash</span>
+                        <div id="budgetEndingCashDisplay" class="text-xl font-bold text-white">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- Cash Flow Chart -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                    <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-area text-blue-600"></i> 12-Month Cash Flow & Cumulative Balance Visualizer
+                    </h2>
+                    <div class="h-72 w-full">
+                        <canvas id="cashFlowChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 12-Month Interactive Budget Matrix -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-3">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-table text-indigo-600"></i> Monthly Income & Expense Matrix
+                            </h2>
+                            <p class="text-[11px] text-slate-500">Edit values below to adjust live calculations</p>
+                        </div>
+
+                        <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
+                            <label for="startMonthSelect" class="text-xs font-semibold text-slate-700 whitespace-nowrap flex items-center gap-1">
+                                <i class="fa-regular fa-calendar text-blue-600"></i> Start Month:
+                            </label>
+                            <select id="startMonthSelect" onchange="changeStartMonth(this.value)" class="bg-white border border-slate-300 rounded px-2 py-1 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="0">January</option>
+                                <option value="1">February</option>
+                                <option value="2">March</option>
+                                <option value="3">April</option>
+                                <option value="4">May</option>
+                                <option value="5">June</option>
+                                <option value="6">July</option>
+                                <option value="7">August</option>
+                                <option value="8">September</option>
+                                <option value="9">October</option>
+                                <option value="10">November</option>
+                                <option value="11">December</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto no-scrollbar border border-slate-200 rounded-lg">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-800 text-white font-semibold uppercase text-center">
+                                <tr id="budgetMatrixHeaderRow"></tr>
+                            </thead>
+                            <tbody id="budgetMatrixBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 50/30/20 Budget Health Analysis -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                    <h2 class="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-pie-chart text-amber-600"></i> 50/30/20 Rule Compliance Analysis
+                    </h2>
+                    <p class="text-[11px] text-slate-500 mb-3">Target: 50% Needs, 30% Wants, 20% Savings/Investing.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-800 text-xs">Needs (50%)</span>
+                                <span id="pctNeeds" class="font-bold text-blue-600 text-xs">0.0%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 mb-1.5">
+                                <div id="barNeeds" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-800 text-xs">Wants (30%)</span>
+                                <span id="pctWants" class="font-bold text-purple-600 text-xs">0.0%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 mb-1.5">
+                                <div id="barWants" class="bg-purple-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-slate-800 text-xs">Savings / Investing (20%)</span>
+                                <span id="pctSavings" class="font-bold text-emerald-600 text-xs">0.0%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 mb-1.5">
+                                <div id="barSavings" class="bg-emerald-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: CONSULTATION REQUEST -->
+            <div id="consultationTab" class="tab-content hidden">
+                <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+                    <div class="text-center max-w-xl mx-auto mb-8">
+                        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-slate-900">Request a Direct Professional Session</h2>
+                        <p class="text-sm text-slate-600 mt-2">
+                            Connect directly with author & creator <strong class="text-slate-800">Ana M Hernandez Munoz</strong> for personalized accounting, budgeting, and financial planning guidance.
+                        </p>
+                    </div>
+
+                    <form action="mailto:acctgthemagic@gmail.com" method="post" enctype="text/plain" class="space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Your Full Name</label>
+                                <input type="text" name="Name" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Your Email Address</label>
+                                <input type="email" name="Email" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Primary Area of Interest</label>
+                            <select name="Consultation Scope" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option>Personal Wealth & Budgeting Review</option>
+                                <option>Debt Reduction & Payoff Strategy</option>
+                                <option>Retirement & Benchmark Alignment</option>
+                                <option>Small Business / Accounting Consultation</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Brief Description of Your Goals</label>
+                            <textarea name="Message" rows="4" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Provide any additional details..."></textarea>
+                        </div>
+
+                        <div class="pt-2 text-center">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg shadow-md transition duration-200 inline-flex items-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                Send Request to acctgthemagic@gmail.com
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- LEGAL PROTECTION & EULA MODAL -->
+    <div id="eulaModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-scale-balanced text-emerald-400"></i> Terms of Service & EULA
+                </h3>
+                <button onclick="toggleModal('eulaModal')" class="text-slate-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                <div class="p-3 bg-blue-50 border-l-4 border-blue-600 text-blue-900 rounded">
+                    <strong>Legal Declaration of Natural Authorship:</strong><br>
+                    This software suite, including its visual layout, structure, dynamic Excel workbook formulas, calculation models, and design code, is the original work and intellectual property created by Ana M Hernandez Munoz (<a href="mailto:acctgthemagic@gmail.com" class="underline">acctgthemagic@gmail.com</a>).
+                </div>
+                
+                <h4 class="font-bold text-slate-800 uppercase text-xs tracking-wider">1. License & Privacy</h4>
+                <p>All data is processed 100% locally in your browser with automated local storage persistence. No information is stored on external servers.</p>
+
+                <h4 class="font-bold text-slate-800 uppercase text-xs tracking-wider">2. INTELLECTUAL PROPERTY PROTECTION</h4>
+                <p>All original formulas, spreadsheet architecture, script functions, and user interfaces remain protected under applicable copyright laws. Unauthorized commercial resale, repackaging, white-labeling, or re-distribution without explicit written permission from Ana M Hernandez Munoz is strictly prohibited.</p>
+
+                <h4 class="font-bold text-slate-800 uppercase text-xs tracking-wider">3. CONTACT & AUTHOR INQUIRIES</h4>
+                <p>For licensing requests, consultation inquiries, or legal concerns, contact the original author directly at: <a href="mailto:acctgthemagic@gmail.com" class="text-blue-600 underline">acctgthemagic@gmail.com</a></p>
+            </div>
+
+            <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 text-right">
+                <button onclick="toggleModal('eulaModal')" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-5 py-2 rounded-lg text-xs">
+                    I Understand & Accept
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 mt-8 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-2">
+            <p>© 2026 Ana M Hernandez Munoz (<a href="mailto:acctgthemagic@gmail.com" class="text-blue-400 hover:underline">acctgthemagic@gmail.com</a>). All Rights Reserved.</p>
+            <p class="text-slate-500">Built for browser-local calculation with localStorage persistence.</p>
+        </div>
+    </footer>
+
+    <script>
+        let cashFlowChartInstance = null;
+        let startMonthIndex = 0;
+        const monthNamesAll = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        function getOrderedMonthNames() {
+            const list = [];
+            for (let i = 0; i < 12; i++) {
+                list.push(monthNamesAll[(startMonthIndex + i) % 12]);
+            }
+            return list;
+        }
+
+        const initialCategoriesData = {
+            income: [
+                { name: "Net Salary / Paycheck", values: Array(12).fill("") },
+                { name: "Side Business / Freelance", values: Array(12).fill("") },
+                { name: "Other Income", values: Array(12).fill("") }
+            ],
+            needs: [
+                { name: "Rent / Mortgage Payment", values: Array(12).fill("") },
+                { name: "Utilities & Internet", values: Array(12).fill("") },
+                { name: "Groceries & Household", values: Array(12).fill("") },
+                { name: "Auto Loans & Insurance", values: Array(12).fill("") },
+                { name: "Minimum Debt Payments", values: Array(12).fill("") }
+            ],
+            wants: [
+                { name: "Dining Out & Social", values: Array(12).fill("") },
+                { name: "Entertainment & Subscriptions", values: Array(12).fill("") },
+                { name: "Shopping & Travel", values: Array(12).fill("") }
+            ],
+            savings: [
+                { name: "Emergency Fund Deposit", values: Array(12).fill("") },
+                { name: "401k / IRA Additional", values: Array(12).fill("") },
+                { name: "Brokerage / Investments", values: Array(12).fill("") }
+            ]
+        };
+
+        let budgetCategories = JSON.parse(JSON.stringify(initialCategoriesData));
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active', 'text-blue-600', 'border-blue-600');
+                el.classList.add('text-slate-500', 'border-transparent');
+            });
+
+            document.getElementById(tabId).classList.remove('hidden');
+            const targetBtn = document.getElementById('tab-' + tabId);
+            targetBtn.classList.add('active', 'text-blue-600');
+            targetBtn.classList.remove('text-slate-500', 'border-transparent');
+
+            if (tabId === 'annualPlanTab') {
+                setTimeout(() => renderBudgetMatrix(), 100);
+            }
+        }
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('hidden');
+        }
+
+        function changeStartMonth(val) {
+            startMonthIndex = parseInt(val, 10) || 0;
+            renderBudgetMatrix();
+            saveDataToLocalStorage();
+        }
+
+        // --- LOCAL STORAGE PERSISTENCE & JSON BACKUP ---
+        function saveDataToLocalStorage() {
+            const data = {
+                age: document.getElementById('inputAge').value,
+                salary: document.getElementById('inputSalary').value,
+                checking: document.getElementById('assetChecking').value,
+                savings: document.getElementById('assetSavings').value,
+                investments: document.getElementById('assetInvestments').value,
+                retirement: document.getElementById('assetRetirement').value,
+                assetOther: document.getElementById('assetOther').value,
+                debtCredit: document.getElementById('debtCredit').value,
+                debtAuto: document.getElementById('debtAuto').value,
+                debtStudent: document.getElementById('debtStudent').value,
+                debtMortgage: document.getElementById('debtMortgage').value,
+                debtOther: document.getElementById('debtOther').value,
+                startMonthIndex: startMonthIndex,
+                budgetCategories: budgetCategories
+            };
+            localStorage.setItem('financial_suite_data', JSON.stringify(data));
+        }
+
+        function loadDataFromLocalStorage() {
+            const saved = localStorage.getItem('financial_suite_data');
+            if (!saved) return;
+            try {
+                const data = JSON.parse(saved);
+                document.getElementById('inputAge').value = data.age || "";
+                document.getElementById('inputSalary').value = data.salary || "";
+                document.getElementById('assetChecking').value = data.checking || "";
+                document.getElementById('assetSavings').value = data.savings || "";
+                document.getElementById('assetInvestments').value = data.investments || "";
+                document.getElementById('assetRetirement').value = data.retirement || "";
+                document.getElementById('assetOther').value = data.assetOther || "";
+                document.getElementById('debtCredit').value = data.debtCredit || "";
+                document.getElementById('debtAuto').value = data.debtAuto || "";
+                document.getElementById('debtStudent').value = data.debtStudent || "";
+                document.getElementById('debtMortgage').value = data.debtMortgage || "";
+                document.getElementById('debtOther').value = data.debtOther || "";
+                
+                if (data.startMonthIndex !== undefined) {
+                    startMonthIndex = data.startMonthIndex;
+                    document.getElementById('startMonthSelect').value = startMonthIndex;
+                }
+                if (data.budgetCategories) {
+                    budgetCategories = data.budgetCategories;
+                }
+            } catch (e) {
+                console.error("Error loading local storage data", e);
+            }
+        }
+
+        function exportJSONBackup() {
+            const data = localStorage.getItem('financial_suite_data') || "{}";
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Financial_Suite_Backup.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importJSONBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    localStorage.setItem('financial_suite_data', e.target.result);
+                    loadDataFromLocalStorage();
+                    updateCalculations();
+                    alert('Backup successfully imported!');
+                } catch (err) {
+                    alert('Invalid backup file format.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetToBlank() {
+            if (confirm("Are you sure you want to clear all data and reset to blank?")) {
+                localStorage.removeItem('financial_suite_data');
+                document.getElementById('inputAge').value = "";
+                document.getElementById('inputSalary').value = "";
+                document.getElementById('assetChecking').value = "";
+                document.getElementById('assetSavings').value = "";
+                document.getElementById('assetInvestments').value = "";
+                document.getElementById('assetRetirement').value = "";
+                document.getElementById('assetOther').value = "";
+                document.getElementById('debtCredit').value = "";
+                document.getElementById('debtAuto').value = "";
+                document.getElementById('debtStudent').value = "";
+                document.getElementById('debtMortgage').value = "";
+                document.getElementById('debtOther').value = "";
+
+                startMonthIndex = 0;
+                document.getElementById('startMonthSelect').value = "0";
+                budgetCategories = JSON.parse(JSON.stringify(initialCategoriesData));
+                updateCalculations();
+            }
+        }
+
+        function updateCalculations() {
+            const age = parseFloat(document.getElementById('inputAge').value) || 0;
+            const salary = parseFloat(document.getElementById('inputSalary').value) || 0;
+
+            const checking = parseFloat(document.getElementById('assetChecking').value) || 0;
+            const savings = parseFloat(document.getElementById('assetSavings').value) || 0;
+            const investments = parseFloat(document.getElementById('assetInvestments').value) || 0;
+            const retirement = parseFloat(document.getElementById('assetRetirement').value) || 0;
+            const otherAssets = parseFloat(document.getElementById('assetOther').value) || 0;
+
+            const debtCredit = parseFloat(document.getElementById('debtCredit').value) || 0;
+            const debtAuto = parseFloat(document.getElementById('debtAuto').value) || 0;
+            const debtStudent = parseFloat(document.getElementById('debtStudent').value) || 0;
+            const debtMortgage = parseFloat(document.getElementById('debtMortgage').value) || 0;
+            const debtOther = parseFloat(document.getElementById('debtOther').value) || 0;
+
+            const totalAssets = checking + savings + investments + retirement + otherAssets;
+            const totalLiabilities = debtCredit + debtAuto + debtStudent + debtMortgage + debtOther;
+            const netWorth = totalAssets - totalLiabilities;
+            const liquidCash = checking + savings;
+
+            const debtToAsset = totalAssets > 0 ? ((totalLiabilities / totalAssets) * 100).toFixed(1) : "0.0";
+            const monthlySalaryNeeds = (salary / 12) * 0.5;
+            const emergencyMonths = monthlySalaryNeeds > 0 ? (savings / monthlySalaryNeeds).toFixed(1) : "0.0";
+
+            document.getElementById('displayTotalAssets').textContent = formatCurrency(totalAssets);
+            document.getElementById('displayTotalLiabilities').textContent = formatCurrency(totalLiabilities);
+            document.getElementById('metricNetWorth').textContent = formatCurrency(netWorth);
+            document.getElementById('metricLiquidBalance').textContent = formatCurrency(liquidCash);
+            document.getElementById('metricDebtToAsset').textContent = `${debtToAsset}%`;
+            document.getElementById('metricEmergencyMonths').textContent = `${emergencyMonths} Months`;
+            document.getElementById('budgetStartingCashDisplay').textContent = formatCurrency(liquidCash);
+
+            renderBenchmarks(age, salary, retirement);
+            renderBudgetMatrix();
+            saveDataToLocalStorage();
+        }
+
+        function renderBenchmarks(age, salary, currentSavings) {
+            const milestones = [
+                { age: 30, targetMult: 1 },
+                { age: 35, targetMult: 2 },
+                { age: 40, targetMult: 3 },
+                { age: 45, targetMult: 4 },
+                { age: 50, targetMult: 6 },
+                { age: 55, targetMult: 7 },
+                { age: 60, targetMult: 8 },
+                { age: 67, targetMult: 10 }
+            ];
+
+            const tbody = document.getElementById('benchmarkTableBody');
+            tbody.innerHTML = '';
+
+            milestones.forEach(m => {
+                const targetSavings = salary * m.targetMult;
+                const isCurrentAgeCohort = age > 0 && age >= m.age - 2 && age <= m.age + 2;
+                const isMet = currentSavings > 0 && currentSavings >= targetSavings;
+
+                const tr = document.createElement('tr');
+                tr.className = isCurrentAgeCohort ? 'bg-blue-50/80 font-medium' : 'hover:bg-slate-50';
+
+                tr.innerHTML = `
+                    <td class="px-2.5 py-1.5 font-medium text-slate-900">Age ${m.age} ${isCurrentAgeCohort ? '<span class="text-[10px] text-blue-600 font-bold ml-1">(Your Cohort)</span>' : ''}</td>
+                    <td class="px-2.5 py-1.5">${m.targetMult}x Salary</td>
+                    <td class="px-2.5 py-1.5 font-semibold text-slate-800">${formatCurrency(targetSavings)}</td>
+                    <td class="px-2.5 py-1.5">
+                        ${isMet 
+                            ? '<span class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold">On Track</span>' 
+                            : '<span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-bold">Behind Target</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderBudgetMatrix() {
+            const currentMonthList = getOrderedMonthNames();
+
+            const headerRow = document.getElementById('budgetMatrixHeaderRow');
+            headerRow.innerHTML = `<th class="p-1.5 text-left w-36 bg-slate-800 sticky left-0 z-10">Category</th>`;
+            currentMonthList.forEach(m => {
+                headerRow.innerHTML += `<th class="p-1 text-center">${m}</th>`;
+            });
+            headerRow.innerHTML += `<th class="p-1 bg-slate-900 text-center">Total</th>`;
+
+            const tbody = document.getElementById('budgetMatrixBody');
+            tbody.innerHTML = '';
+
+            const monthlyIncomeTotals = Array(12).fill(0);
+            const monthlyNeedsTotals = Array(12).fill(0);
+            const monthlyWantsTotals = Array(12).fill(0);
+            const monthlySavingsTotals = Array(12).fill(0);
+            const monthlyExpenseTotals = Array(12).fill(0);
+
+            const buildRows = (items, categoryType, titleLabel, bgHeader) => {
+                let sectionHeader = `<tr class="${bgHeader} text-slate-800 font-bold uppercase"><td class="border-t border-b border-slate-200 text-xs px-2.5 py-1.5" colspan="14">${titleLabel}</td></tr>`;
+                tbody.insertAdjacentHTML('beforeend', sectionHeader);
+
+                items.forEach((item, idx) => {
+                    let totalRowVal = item.values.reduce((a, b) => a + (parseFloat(b) || 0), 0);
+                    let rowHtml = `<tr class="hover:bg-slate-50 border-b border-slate-100">
+                        <td class="p-1 font-medium text-slate-800 sticky left-0 bg-white z-10 border-r border-slate-100 truncate w-36">${item.name}</td>`;
+
+                    for (let step = 0; step < 12; step++) {
+                        let actualMonthIdx = (startMonthIndex + step) % 12;
+                        let v = item.values[actualMonthIdx];
+                        let numVal = parseFloat(v) || 0;
+
+                        rowHtml += `<td class="p-0.5">
+                            <input type="number" value="${v}" placeholder="0" onchange="updateMatrixValue('${categoryType}', ${idx}, ${actualMonthIdx}, this.value)" 
+                                class="w-full text-right bg-transparent focus:bg-white border border-transparent hover:border-slate-300 focus:border-blue-500 rounded px-1 py-0.5 text-xs">
+                        </td>`;
+
+                        if (categoryType === 'income') monthlyIncomeTotals[step] += numVal;
+                        if (categoryType === 'needs') { monthlyNeedsTotals[step] += numVal; monthlyExpenseTotals[step] += numVal; }
+                        if (categoryType === 'wants') { monthlyWantsTotals[step] += numVal; monthlyExpenseTotals[step] += numVal; }
+                        if (categoryType === 'savings') { monthlySavingsTotals[step] += numVal; monthlyExpenseTotals[step] += numVal; }
+                    }
+
+                    rowHtml += `<td class="p-1 font-bold text-slate-900 text-right bg-slate-50">${formatCurrency(totalRowVal)}</td></tr>`;
+                    tbody.insertAdjacentHTML('beforeend', rowHtml);
+                });
+            };
+
+            buildRows(budgetCategories.income, 'income', '1. Income Stream Categories', 'bg-blue-50');
+            buildRows(budgetCategories.needs, 'needs', '2. Essential Needs (50% Target)', 'bg-indigo-50');
+            buildRows(budgetCategories.wants, 'wants', '3. Lifestyle Wants (30% Target)', 'bg-purple-50');
+            buildRows(budgetCategories.savings, 'savings', '4. Savings & Investments (20% Target)', 'bg-emerald-50');
+
+            const liquidCash = (parseFloat(document.getElementById('assetChecking').value) || 0) + (parseFloat(document.getElementById('assetSavings').value) || 0);
+            let cumulativeCash = liquidCash;
+            const cumulativeBalances = [];
+
+            let totalYearlyIncome = monthlyIncomeTotals.reduce((a,b)=>a+b, 0);
+            let totalYearlyExpense = monthlyExpenseTotals.reduce((a,b)=>a+b, 0);
+
+            let summaryRowsHtml = `
+                <tr class="bg-slate-800 text-white font-bold border-t-2 border-slate-900">
+                    <td class="p-1.5 sticky left-0 bg-slate-800 z-10 w-36">Total Income</td>
+                    ${monthlyIncomeTotals.map(v => `<td class="p-1 text-right">${formatCurrency(v)}</td>`).join('')}
+                    <td class="p-1 text-right bg-slate-900 text-emerald-400">${formatCurrency(totalYearlyIncome)}</td>
+                </tr>
+                <tr class="bg-slate-700 text-white font-bold">
+                    <td class="p-1.5 sticky left-0 bg-slate-700 z-10 w-36">Total Expenses</td>
+                    ${monthlyExpenseTotals.map(v => `<td class="p-1 text-right">${formatCurrency(v)}</td>`).join('')}
+                    <td class="p-1 text-right bg-slate-900 text-rose-400">${formatCurrency(totalYearlyExpense)}</td>
+                </tr>
+                <tr class="bg-slate-100 font-bold text-slate-900 border-t border-slate-300">
+                    <td class="p-1.5 sticky left-0 bg-slate-100 z-10 w-36">Net Cash Flow</td>
+                    ${monthlyIncomeTotals.map((inc, i) => {
+                        let net = inc - monthlyExpenseTotals[i];
+                        cumulativeCash += net;
+                        cumulativeBalances.push(cumulativeCash);
+                        return `<td class="p-1 text-right ${net >= 0 ? 'text-emerald-700' : 'text-rose-700'}">${formatCurrency(net)}</td>`;
+                    }).join('')}
+                    <td class="p-1 text-right bg-slate-200">${formatCurrency(totalYearlyIncome - totalYearlyExpense)}</td>
+                </tr>
+                <tr class="bg-blue-900 text-white font-bold">
+                    <td class="p-1.5 sticky left-0 bg-blue-900 z-10 w-36">Ending Balance</td>
+                    ${cumulativeBalances.map(bal => `<td class="p-1 text-right text-emerald-300">${formatCurrency(bal)}</td>`).join('')}
+                    <td class="p-1 text-right bg-slate-950 text-emerald-400">${formatCurrency(cumulativeBalances[11] || 0)}</td>
+                </tr>
+            `;
+
+            tbody.insertAdjacentHTML('beforeend', summaryRowsHtml);
+            document.getElementById('budgetEndingCashDisplay').textContent = formatCurrency(cumulativeBalances[11] || 0);
+
+            let totalNeeds = monthlyNeedsTotals.reduce((a,b)=>a+b, 0);
+            let totalWants = monthlyWantsTotals.reduce((a,b)=>a+b, 0);
+            let totalSavings = monthlySavingsTotals.reduce((a,b)=>a+b, 0);
+
+            if (totalYearlyIncome > 0) {
+                let pNeeds = ((totalNeeds / totalYearlyIncome) * 100).toFixed(1);
+                let pWants = ((totalWants / totalYearlyIncome) * 100).toFixed(1);
+                let pSavings = ((totalSavings / totalYearlyIncome) * 100).toFixed(1);
+
+                document.getElementById('pctNeeds').textContent = `${pNeeds}%`;
+                document.getElementById('barNeeds').style.width = `${Math.min(pNeeds, 100)}%`;
+                document.getElementById('pctWants').textContent = `${pWants}%`;
+                document.getElementById('barWants').style.width = `${Math.min(pWants, 100)}%`;
+                document.getElementById('pctSavings').textContent = `${pSavings}%`;
+                document.getElementById('barSavings').style.width = `${Math.min(pSavings, 100)}%`;
+            }
+
+            renderChart(currentMonthList, monthlyIncomeTotals, monthlyExpenseTotals, cumulativeBalances);
+        }
+
+        function updateMatrixValue(category, catIndex, monthIndex, val) {
+            budgetCategories[category][catIndex].values[monthIndex] = val !== "" ? (parseFloat(val) || 0) : "";
+            renderBudgetMatrix();
+            saveDataToLocalStorage();
+        }
+
+        function renderChart(monthLabels = [], incomeData = [], expenseData = [], balanceData = []) {
+            const ctx = document.getElementById('cashFlowChart');
+            if (!ctx) return;
+            if (cashFlowChartInstance) cashFlowChartInstance.destroy();
+
+            cashFlowChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: monthLabels,
+                    datasets: [
+                        { label: 'Monthly Income ($)', data: incomeData, backgroundColor: 'rgba(37, 99, 235, 0.7)', borderRadius: 4 },
+                        { label: 'Monthly Expenses ($)', data: expenseData, backgroundColor: 'rgba(225, 29, 72, 0.7)', borderRadius: 4 },
+                        { label: 'Ending Cash Balance ($)', data: balanceData, type: 'line', borderColor: '#10b981', borderWidth: 3, fill: false, tension: 0.3, yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Monthly Income / Expenses ($)' } },
+                        y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Cumulative Balance ($)' } }
+                    }
+                }
+            });
+        }
+
+        async function exportCombinedPDF() {
+            const tab1 = document.getElementById('startingPointTab');
+            const tab2 = document.getElementById('annualPlanTab');
+
+            const tab1WasHidden = tab1.classList.contains('hidden');
+            const tab2WasHidden = tab2.classList.contains('hidden');
+
+            tab1.classList.remove('hidden');
+            tab2.classList.remove('hidden');
+
+            const pdfContainer = document.createElement('div');
+            pdfContainer.className = 'p-6 bg-white space-y-6';
+
+            const printStyles = `
+                <style>
+                    .budget-matrix-print-scope table { width: 100% !important; table-layout: fixed !important; font-size: 7px !important; }
+                    .budget-matrix-print-scope th, .budget-matrix-print-scope td { padding: 1px 0px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+                    .budget-matrix-print-scope input { border: none !important; background: transparent !important; padding: 0 !important; font-size: 7px !important; text-align: right !important; width: 100% !important; }
+                    .budget-matrix-print-scope .sticky { position: static !important; }
+                </style>
+            `;
+
+            pdfContainer.innerHTML = `${printStyles}<div class="border-b border-slate-300 pb-3 mb-4"><h1 class="text-xl font-bold text-slate-900">Comprehensive Financial Health Report</h1><p class="text-xs text-slate-500">Generated by Annual Budget & Financial Health Suite • Author: Ana M Hernandez Munoz</p></div>`;
+
+            const exportWrapper = document.createElement('div');
+            exportWrapper.className = 'space-y-6';
+
+            const tab1Clone = tab1.cloneNode(true);
+            const tab2Clone = tab2.cloneNode(true);
+
+            const liveCanvas = document.getElementById('cashFlowChart');
+            if (liveCanvas && cashFlowChartInstance) {
+                const chartImageURL = liveCanvas.toDataURL('image/png', 1.0);
+                const clonedCanvasContainer = tab2Clone.querySelector('#cashFlowChart').parentNode;
+                if (clonedCanvasContainer) {
+                    clonedCanvasContainer.innerHTML = `<img src="${chartImageURL}" style="width: 100%; height: auto; display: block;" alt="Cash Flow Chart"/>`;
+                }
+            }
+
+            const matrixContainer = tab2Clone.querySelector('.overflow-x-auto');
+            if (matrixContainer) matrixContainer.classList.add('budget-matrix-print-scope');
+
+            const pageBreak = document.createElement('div');
+            pageBreak.style.pageBreakBefore = 'always';
+
+            exportWrapper.appendChild(tab1Clone);
+            exportWrapper.appendChild(pageBreak);
+            exportWrapper.appendChild(tab2Clone);
+
+            pdfContainer.appendChild(exportWrapper);
+            document.body.appendChild(pdfContainer);
+
+            const opt = {
+                margin: [0.4, 0.4, 0.4, 0.4],
+                filename: 'Financial_Health_and_Budget_Report.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(pdfContainer).save();
+            } finally {
+                document.body.removeChild(pdfContainer);
+                if (tab1WasHidden) tab1.classList.add('hidden');
+                if (tab2WasHidden) tab2.classList.add('hidden');
+            }
+        }
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(val);
+        }
+
+        window.onload = function() {
+            loadDataFromLocalStorage();
+            updateCalculations();
+        };
+    </script>
+</body>
+</html>
